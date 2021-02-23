@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+</head>
+<style>
+    .mymsg{
+        text-align: right;
+        background-color: #bce8f1;
+        width: 100%;
+        white-space: pre-wrap;
+    }
+    .othermsg{
+        background-color: #c1e2b3;
+        width: 100%;
+        white-space: pre-wrap;
+    }
+    .wismsg{
+        background-color: #ce8483;
+        width: 100%;
+        white-space: pre-wrap;
+    }
+    .allmsg{
+        background-color: #7a43b6;
+        width: 100%;
+        white-space: pre-wrap;
+    }
+</style>
+<body style="height: 100%; width: 100%">
+
+<div class="chatroomtitle" style=" height:300px; overflow-x:hidden;overflow-y:scroll; ">
+</div>
+
+<div class="ctrdiv" style="position: fixed; left: 0%; top:90%; width:100%; height: 10%; ">
+메시지<input style="width:90% "class="msgipt">
+<button class="msgbtn">보내기</button>
+<button class="mkroombtn">방만들기</button>
+<button class="mvroombtn">방이동하기</button>
+<button class="wisbtn">귓속말</button>
+    <button class="allbtn">외치기</button>
+
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+    var chatdiv =  document.querySelector('.chatroomtitle');
+    var ctrdiv =  document.querySelector('.ctrdiv');
+
+    var height = Math.ceil(window.innerHeight * 0.9);
+    chatdiv.style.height=height+'px';
+    ctrdiv.style.top = height+'px';
+    var loginName = prompt("LOGIN NAME");
+
+    var socket = io();
+    var user = { userid:loginName,
+                  childname:'childname',
+                   school:'school',
+                   room :'school',
+                   grade:'grade',
+                   img:'img'};
+
+    socket.emit('login', user);
+
+
+    document.querySelector(".allbtn").addEventListener('click',function (event) {
+        user.msg = document.querySelector('.msgipt').value;
+        socket.emit('allmsg', user);
+    })
+    document.querySelector(".wisbtn").addEventListener('click',function (event) {
+        user.msg = document.querySelector('.msgipt').value;
+        user.to = prompt("보낼사람");
+        socket.emit('wismsgto', user);
+    })
+    document.querySelector(".msgbtn").addEventListener('click',function (event) {
+        user.msg = document.querySelector('.msgipt').value;
+        socket.emit('message', user);
+    })
+    document.querySelector(".mkroombtn").addEventListener('click',function (event) {
+        user.mkroom= document.querySelector('.msgipt').value;
+        socket.emit('mkroom', user);
+    })
+    document.querySelector(".mvroombtn").addEventListener('click',function (event) {
+        user.mvroom = document.querySelector('.msgipt').value;
+        socket.emit('mvroom', user);
+    })
+    socket.on('visit', function (data) {
+        chatdiv.innerHTML=chatdiv.innerHTML+'<li>'+data+'방에 입장하였습니다'+'</li>'
+        user.room = data;
+        user.msg = user.userid+'가 입장하였습니다';
+        socket.emit('visit', user);
+    });
+    socket.on('roommsg', function (data) {
+        var msgdiv =  document.createElement("div");
+        var msgspan = document.createElement("span");
+        var msgspantxt = document.createTextNode(data.msg);
+          var idspan = document.createElement("span");
+        var idspantxt = document.createTextNode(data.userid+'['+data.childname+'] : ');
+        idspan.appendChild(idspantxt)
+        msgspan.appendChild(msgspantxt);
+        if(user.userid == data.userid){
+            $(msgdiv).addClass("mymsg");
+            msgdiv.appendChild(msgspan);
+        }else{
+            $(msgdiv).addClass("othermsg");
+              msgdiv.appendChild(idspan);
+            msgdiv.appendChild(msgspan);
+        }
+        chatdiv.appendChild(msgdiv);
+    });
+    socket.on('mkroomresult', function (data) {
+        alert(data)
+    })
+    socket.on('mvroomresult', function (data) {
+        alert(data)
+    })
+    socket.on('wismsgfrom', function (data) {
+        var msgdiv =  document.createElement("div");
+        var msgspan = document.createElement("span");
+        var msgspantxt = document.createTextNode(data.msg);
+        var idspan = document.createElement("span");
+        var idspantxt = document.createTextNode(data.userid+'['+data.childname+'] : ');
+        idspan.appendChild(idspantxt)
+        msgspan.appendChild(msgspantxt);
+        msgdiv.appendChild(idspan);
+        msgdiv.appendChild(msgspan);
+        $(msgdiv).addClass("wismsg");
+        chatdiv.appendChild(msgdiv);
+    })
+    socket.on('allmsg', function (data) {
+        var msgdiv =  document.createElement("div");
+        var msgspan = document.createElement("span");
+        var msgspantxt = document.createTextNode(data.msg);
+        var idspan = document.createElement("span");
+        var idspantxt = document.createTextNode(data.userid+'['+data.childname+'] : ');
+        idspan.appendChild(idspantxt)
+        msgspan.appendChild(msgspantxt);
+        msgdiv.appendChild(idspan);
+        msgdiv.appendChild(msgspan);
+        $(msgdiv).addClass("allmsg");
+        chatdiv.appendChild(msgdiv);
+    })
+
+
+</script>
+</body>
+</html>
